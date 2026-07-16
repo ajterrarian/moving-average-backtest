@@ -22,11 +22,12 @@ def main():
     #deal with look-ahead bias b/c you cant trade on the same day as a signal change; shift the signal column down by 1
     data = simulate_trading(data, initial_capital)
 
-    total_return, sharpe_ratio, drawdown = compute_performance(data, initial_capital)
+    total_return, sharpe_ratio, drawdown, winrate = compute_performance(data, initial_capital)
     print(data.tail(20))
     print(f"Total Return: {total_return:.2%}")
     print(f"Sharpe Ratio: {sharpe_ratio:.2f}")
     print(f"Max Drawdown: {drawdown:.2%}")
+    print(f"Winrate: {winrate:.2%}")
 
 def load_and_clean_data(ticker, start_date, end_date):
     #download the data from the yfinance library
@@ -82,8 +83,29 @@ def compute_performance(data, initial_capital):
     data['Drawdown'] = (data['Running_Max'] - data['Equity_Curve']) / data['Running_Max']
     drawdown = data['Drawdown'].max()
     
-    return total_return, sharpe_ratio, drawdown
 
+    ##WINRATE CALCULATION
+    #calcuate the percentage of winning trades
+    exit_row = data.loc[data['Position'].diff() == -1]
+    entry_row = data.loc[data['Position'].diff() == 1]
+
+    #get values without index for easier calculation
+    exit_values = exit_row['Close'].values
+    entry_values = entry_row['Close'].values
+    
+    #entry/exit value exceptions
+    if len(exit_values) - len(entry_values) == 1:
+        exit_values = exit_values[1:]
+    elif len(entry_values) - len(exit_values) ==1:
+        entry_values = entry_values[:-1]
+    elif len(exit_values) != len(entry_values):
+        raise ValueError("The number of entry and exit signals do not match. Please check the data and signals.")
+    
+    #calculation
+    trade_values = exit_values - entry_values
+    winrate = (trade_values > 0).sum() / len(trade_values)
+
+    return total_return, sharpe_ratio, drawdown, winrate
 
 if __name__ == "__main__":
     main()
