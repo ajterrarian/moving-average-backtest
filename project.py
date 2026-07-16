@@ -22,11 +22,11 @@ def main():
     #deal with look-ahead bias b/c you cant trade on the same day as a signal change; shift the signal column down by 1
     data = simulate_trading(data, initial_capital)
 
-    compute_performance(data, initial_capital, start_date, end_date)
-    total_return, sharpe_ratio = compute_performance(data, initial_capital, start_date, end_date)
+    total_return, sharpe_ratio, drawdown = compute_performance(data, initial_capital)
     print(data.tail(20))
     print(f"Total Return: {total_return:.2%}")
     print(f"Sharpe Ratio: {sharpe_ratio:.2f}")
+    print(f"Max Drawdown: {drawdown:.2%}")
 
 def load_and_clean_data(ticker, start_date, end_date):
     #download the data from the yfinance library
@@ -62,7 +62,8 @@ def simulate_trading(data, initial_capital):
 
     return data
 
-def compute_performance(data, initial_capital, start_date, end_date):
+def compute_performance(data, initial_capital):
+    ##SHARPE RATIO CALCULATION
     #return total returns over the whole backtest
     total_return = (data['Equity_Curve'].iloc[-1] / initial_capital) - 1
     
@@ -72,8 +73,16 @@ def compute_performance(data, initial_capital, start_date, end_date):
     
     #calculate the sharpe ratio to account for risk in returns
     sharpe_ratio = ((data['Strategy_Return'].mean() - daily_rfr) * 252 ** 0.5) /data['Strategy_Return'].std()
+
+    ##MAX DRAWDOWN CALCULATION
+    #calculate the running maximum of the equity curve
+    data['Running_Max'] = data['Equity_Curve'].cummax()
+
+    #calculate the drawdown point
+    data['Drawdown'] = (data['Running_Max'] - data['Equity_Curve']) / data['Running_Max']
+    drawdown = data['Drawdown'].max()
     
-    return total_return, sharpe_ratio
+    return total_return, sharpe_ratio, drawdown
 
 
 if __name__ == "__main__":
