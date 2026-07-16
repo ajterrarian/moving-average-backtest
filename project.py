@@ -61,6 +61,9 @@ def simulate_trading(data, initial_capital):
     #create an equity curve based on the strategy return and initial capital
     data['Equity_Curve'] = initial_capital * (1 + data['Strategy_Return']).cumprod()
 
+    ##BUY AND HOLD STRATEGY
+    data['Buy_Hold'] = initial_capital * (1 + data['Daily_Return']).cumprod()
+
     return data
 
 def compute_performance(data, initial_capital):
