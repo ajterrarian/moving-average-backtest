@@ -29,6 +29,8 @@ def main():
     print(f"Max Drawdown: {drawdown:.2%}")
     print(f"Winrate: {winrate:.2%}")
 
+    plot_results(data)
+
 def load_and_clean_data(ticker, start_date, end_date):
     #download the data from the yfinance library
     data = yf.download(ticker, start=start_date, end=end_date)
@@ -110,5 +112,16 @@ def compute_performance(data, initial_capital):
 
     return total_return, sharpe_ratio, drawdown, winrate
 
+def plot_results(data):
+    #plot the equity curve and buy/hold benchmark
+    fig, ax = plt.subplots()
+    ax.plot(data.index, data['Equity_Curve'], label = "Rolling Average Strategy", color = 'blue', linewidth = 2, linestyle = '-')
+    ax.plot(data.index, data['Buy_Hold'], label = "Buy/Hold Benchmark Strategy", color = 'red', linewidth = 2, linestyle = '-')
+    ax.set_title("Equity Curve Comparison")
+    ax.set_xlabel("Date")
+    ax.set_ylabel("Portfolio Value")
+    ax.legend(loc = 'upper right')
+    plt.show()
+    
 if __name__ == "__main__":
     main()
