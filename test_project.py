@@ -28,4 +28,16 @@ def test_simulate_trading():
 
 
 def test_compute_performance():
-    ...
+    #import data from prev two functions
+    data = pd.DataFrame({'Close': [20, 20, 20, 21, 22, 23, 22, 21, 20, 19]})
+    data = generate_signals(data, fast_window, slow_window)
+    data = simulate_trading(data, initial_capital=1000)
+
+    #check results
+    total_return, sharpe_ratio, drawdown, winrate = compute_performance(data, initial_capital=1000)
+    assert total_return == 0
+    assert winrate == 0
+    assert drawdown == pytest.approx(2/23)
+    assert sharpe_ratio == pytest.approx(0.15014532931607974)
+
+
